@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: app-registry-staging
+resources:
+  - namespace.yaml
+  - ../../base
+configMapGenerator:
+  - name: app-registry-config
+    literals:
+      - APP_ENVIRONMENT=staging
+      - APP_TRUSTED_USER_HEADER=X-Auth-Request-Email
+images:
+  - name: app-registry
+    newName: ghcr.io/nickbetcher/test1
+    newTag: latest
+patches:
+  - target: { kind: Deployment, name: app-registry }
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target: { kind: Ingress, name: app-registry }
+    patch: |
+      - op: replace
+        path: /spec/rules/0/host
+        value: app-registry.staging.internal.example.com

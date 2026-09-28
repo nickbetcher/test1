@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-registry
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: app
+          image: app-registry  # replaced by `kustomize edit set image` in CD
+          ports:
+            - containerPort: 8000
+          env:
+            - name: APP_REQUIRE_AUTH
+              value: "true"
+          envFrom:
+            - configMapRef:
+                name: app-registry-config
+            # Holds APP_DATABASE_URL and APP_API_TOKENS. Created by the
+            # platform's secret sync (e.g. External Secrets from Vault or
+            # AWS Secrets Manager), never committed to git.
+            - secretRef:
+                name: app-registry-secrets
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8000 }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8000 }
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }

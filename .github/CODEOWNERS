@@ -1,0 +1,5 @@
+# Owners are auto-requested for review. With "Require review from Code Owners"
+# enabled in branch protection, their approval is needed to merge.
+*                   @nickbetcher
+/.github/           @nickbetcher
+/deploy/            @nickbetcher

@@ -1,0 +1,37 @@
+name: Deploy to Kubernetes
+description: Render a kustomize overlay with the given image and apply it.
+inputs:
+  overlay:
+    description: Overlay directory under deploy/k8s/overlays
+    required: true
+  image:
+    description: Fully qualified image reference to deploy
+    required: true
+  kubeconfig:
+    description: Kubeconfig for the target cluster (empty = dry run)
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Render manifests
+      shell: bash
+      run: |
+        cd deploy/k8s/overlays/${{ inputs.overlay }}
+        kustomize edit set image app-registry=${{ inputs.image }}
+        kustomize build . > /tmp/rendered.yaml
+        echo "Rendered manifests for ${{ inputs.overlay }}:"
+        cat /tmp/rendered.yaml
+    - name: Apply
+      shell: bash
+      env:
+        KUBECONFIG_DATA: ${{ inputs.kubeconfig }}
+      run: |
+        if [ -z "$KUBECONFIG_DATA" ]; then
+          echo "::notice::No KUBECONFIG secret for this environment; skipping apply (dry run)."
+          exit 0
+        fi
+        echo "$KUBECONFIG_DATA" > /tmp/kubeconfig
+        export KUBECONFIG=/tmp/kubeconfig
+        kubectl apply -f /tmp/rendered.yaml
+        kubectl -n app-registry-${{ inputs.overlay }} rollout status deploy/app-registry --timeout=180s

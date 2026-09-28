@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="heading">
+  <h1>Registered applications</h1>
+  <a class="button" href="/applications/new">Register new application</a>
+</div>
+{% if apps %}
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Name</th><th>Description</th><th>Owner team</th><th>Contact</th>
+      <th>Lifecycle</th><th>Repository</th><th>Registered</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for app in apps %}
+    <tr>
+      <td><strong>{{ app.name }}</strong></td>
+      <td>{{ app.description }}</td>
+      <td>{{ app.owner_team }}</td>
+      <td><a href="mailto:{{ app.owner_email }}">{{ app.owner_email }}</a></td>
+      <td><span class="badge {{ app.lifecycle }}">{{ app.lifecycle }}</span></td>
+      <td>{% if app.repo_url %}<a href="{{ app.repo_url }}">repo</a>{% endif %}</td>
+      <td title="by {{ app.created_by }}">{{ app.created_at.strftime("%Y-%m-%d") }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="empty">No applications registered yet. <a href="/applications/new">Register the first one.</a></p>
+{% endif %}
+{% endblock %}

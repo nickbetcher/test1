@@ -1,0 +1,22 @@
+# Internal-only ingress. Browser traffic is sent through an SSO proxy
+# (oauth2-proxy here) that logs the user in via the corporate IdP and passes
+# X-Forwarded-Email to the app. /api is also reachable with a bearer token for
+# agents and automation.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-registry
+  annotations:
+    nginx.ingress.kubernetes.io/auth-url: "http://oauth2-proxy.auth.svc.cluster.local/oauth2/auth"
+    nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+    nginx.ingress.kubernetes.io/auth-response-headers: "X-Auth-Request-Email"
+spec:
+  ingressClassName: nginx-internal
+  rules:
+    - host: app-registry.internal.example.com  # overridden per environment
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: app-registry, port: { number: 80 } }

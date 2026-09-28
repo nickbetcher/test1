@@ -1,0 +1,30 @@
+# Production-like local stack: the app plus Postgres.
+#   docker compose up --build   ->  http://localhost:8000
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: registry
+      POSTGRES_PASSWORD: registry
+      POSTGRES_DB: registry
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U registry"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      APP_DATABASE_URL: postgresql+psycopg://registry:registry@db:5432/registry
+      APP_API_TOKENS: local-agent:dev-token-change-me
+      APP_ENVIRONMENT: compose
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

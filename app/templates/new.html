@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Register application{% endblock %}
+{% block content %}
+<h1>Register a new application</h1>
+{% if errors %}
+<div class="errors" role="alert">
+  <p>Please fix the following:</p>
+  <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+<form method="post" action="/applications/new">
+  <label>Name <small>(lowercase, digits, dashes; must be unique)</small>
+    <input name="name" required pattern="[a-z0-9][a-z0-9\-]*" value="{{ form.name or '' }}">
+  </label>
+  <label>Description
+    <textarea name="description" rows="3">{{ form.description or '' }}</textarea>
+  </label>
+  <label>Owner team
+    <input name="owner_team" required value="{{ form.owner_team or '' }}">
+  </label>
+  <label>Owner email
+    <input name="owner_email" type="email" required value="{{ form.owner_email or '' }}">
+  </label>
+  <label>Repository URL
+    <input name="repo_url" type="url" value="{{ form.repo_url or '' }}">
+  </label>
+  <label>Lifecycle
+    <select name="lifecycle">
+      {% for lc in lifecycles %}
+      <option value="{{ lc.value }}" {% if (form.lifecycle or 'active') == lc.value %}selected{% endif %}>{{ lc.value }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <div class="actions">
+    <button type="submit">Register</button>
+    <a href="/">Cancel</a>
+  </div>
+</form>
+{% endblock %}
