@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- build stage: install dependencies into a virtualenv ----
-FROM python:3.12-slim AS build
+FROM python:3.14-slim AS build
 WORKDIR /src
 RUN python -m venv /venv
 ENV PATH="/venv/bin:$PATH"
@@ -10,7 +10,7 @@ COPY app ./app
 RUN pip install --no-cache-dir .
 
 # ---- runtime stage: small image, non-root user ----
-FROM python:3.12-slim
+FROM python:3.14-slim
 RUN useradd --create-home --uid 10001 appuser
 COPY --from=build /venv /venv
 ENV PATH="/venv/bin:$PATH" \
